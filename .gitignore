@@ -1,0 +1,31 @@
+# Python
+__pycache__/
+*.py[cod]
+.venv/
+.pytest_cache/
+.ruff_cache/
+.pyright/
+*.egg-info/
+dist/
+build/
+
+# Node
+node_modules/
+mcp/dist/
+*.tsbuildinfo
+
+# Secrets and local config
+.env
+.env.*
+!.env.example
+
+# Kibble's own index (Kibble indexes itself while we build it)
+.kibble/
+
+# Eval inputs fetched by scripts/ (pinned by SHA, never vendored)
+eval/.repos/
+
+# OS / editor
+.DS_Store
+.idea/
+.vscode/

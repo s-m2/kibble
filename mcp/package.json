@@ -1,0 +1,42 @@
+{
+  "name": "@kibble/mcp",
+  "version": "0.0.1",
+  "description": "Kibble MCP server: bite-sized codebase intelligence for coding agents.",
+  "license": "Apache-2.0",
+  "type": "module",
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/s-m2/kibble.git",
+    "directory": "mcp"
+  },
+  "bin": {
+    "kibble-mcp": "dist/index.js"
+  },
+  "files": [
+    "dist"
+  ],
+  "engines": {
+    "node": ">=20"
+  },
+  "publishConfig": {
+    "access": "public"
+  },
+  "scripts": {
+    "build": "tsc -p tsconfig.build.json",
+    "typecheck": "tsc --noEmit",
+    "test": "vitest run"
+  },
+  "devDependencies": {
+    "@types/node": "^26.6.6",
+    "tsx": "^4.23.15",
+    "typescript": "^7.0.2",
+    "vitest": "^5.1.0"
+  },
+  "dependencies": {
+    "@modelcontextprotocol/sdk": "^1.32.2",
+    "zod": "^4.6.7"
+  },
+  "allowScripts": {
+    "esbuild@0.28.2": true
+  }
+}

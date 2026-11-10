@@ -1,0 +1,35 @@
+# Workspace root. Not published; it only ties the Python packages together
+# (one lockfile, one virtualenv) and holds shared tool config.
+
+[project]
+name = "kibble-workspace"
+version = "0.0.0"
+requires-python = ">=3.11"
+dependencies = []
+
+[dependency-groups]
+dev = ["pytest", "ruff", "pyright"]
+
+[tool.uv]
+package = false
+
+[tool.uv.workspace]
+members = ["engine", "eval"]
+
+[tool.pytest.ini_options]
+testpaths = ["engine/tests"]
+
+[tool.ruff]
+line-length = 100
+target-version = "py311"
+src = ["engine/src"]
+
+[tool.ruff.lint]
+select = ["E", "F", "I", "UP", "B"]
+
+[tool.pyright]
+include = ["engine/src", "engine/tests", "eval", "scripts"]
+pythonVersion = "3.11"
+venvPath = "."
+venv = ".venv"
+typeCheckingMode = "standard"
