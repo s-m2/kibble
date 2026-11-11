@@ -1,5 +1,5 @@
 {
-  "name": "@kibble/mcp",
+  "name": "@kibble-ai/mcp",
   "version": "0.0.1",
   "description": "Kibble MCP server: bite-sized codebase intelligence for coding agents.",
   "license": "Apache-2.0",

@@ -26,7 +26,7 @@ SQLite file.
   strategies; results are published in [`docs/eval-results.md`](docs/eval-results.md).
 
 ```
-agent ──MCP──▶ @kibble/mcp (TS) ──HTTP, loopback + token──▶ kibble-engine (Python) ──▶ SQLite
+agent ──MCP──▶ @kibble-ai/mcp (TS) ──HTTP, loopback + token──▶ kibble-engine (Python) ──▶ SQLite
 ```
 
 Details: [`docs/architecture.md`](docs/architecture.md), decisions in
@@ -37,7 +37,7 @@ Details: [`docs/architecture.md`](docs/architecture.md), decisions in
 | Path      | What                                   | Published as    |
 |-----------|----------------------------------------|-----------------|
 | `engine/` | Python engine (core, store, API, CLI)  | `kibble-engine` (PyPI) |
-| `mcp/`    | TypeScript MCP server + launcher       | `@kibble/mcp` (npm)    |
+| `mcp/`    | TypeScript MCP server + launcher       | `@kibble-ai/mcp` (npm)    |
 | `eval/`   | Retrieval and freshness evaluation     | not published   |
 
 ## Development

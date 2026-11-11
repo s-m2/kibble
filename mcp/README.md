@@ -1,4 +1,4 @@
-# @kibble/mcp
+# @kibble-ai/mcp
 
 The TypeScript half of [Kibble](https://github.com/s-m2/kibble): an MCP server that
 exposes codebase-intelligence tools to coding agents, and launches the Python engine

@@ -3,7 +3,7 @@
 # Plan (see docs/roadmap.md):
 #   - trigger on a v* tag
 #   - verify engine and mcp versions match the tag (make check-versions)
-#   - publish kibble-engine to PyPI and @kibble/mcp to npm using trusted
+#   - publish kibble-engine to PyPI and @kibble-ai/mcp to npm using trusted
 #     publishing (OIDC), with npm provenance; no long-lived tokens in secrets
 #   - smoke-test the published packages under npx (and later bunx / pnpm dlx)
 name: Release (not yet enabled)

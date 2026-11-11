@@ -4,7 +4,7 @@
  coding agent (Claude Code, Cursor, ...)
         │  MCP over stdio
         ▼
- @kibble/mcp  (TypeScript)         tool schemas, launcher, generated API client
+ @kibble-ai/mcp  (TypeScript)         tool schemas, launcher, generated API client
         │  HTTP, 127.0.0.1 only, per-session bearer token
         ▼
  kibble-engine  (Python, FastAPI)  thin wrapper over core

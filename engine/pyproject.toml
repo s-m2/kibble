@@ -10,7 +10,11 @@ dependencies = [
   "uvicorn",
   "pydantic",
   "httpx2",
-  # Added when the code that uses them lands: tree-sitter (+ grammars), sqlite-vec
+  "sqlite-vec",
+  "tree-sitter>=0.25",
+  "tree-sitter-python",
+  "tree-sitter-javascript",
+  "tree-sitter-typescript",
 ]
 
 [project.scripts]

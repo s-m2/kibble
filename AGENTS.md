@@ -6,7 +6,7 @@ details live in `docs/` and `docs/decisions/`.
 ## What this is
 
 Kibble: codebase intelligence for coding agents. A TypeScript MCP server
-(`mcp/`, npm `@kibble/mcp`) launches a Python engine (`engine/`, PyPI
+(`mcp/`, npm `@kibble-ai/mcp`) launches a Python engine (`engine/`, PyPI
 `kibble-engine`) that talks HTTP on localhost. `eval/` measures retrieval quality.
 
 ## Commands
@@ -37,7 +37,7 @@ make openapi    # regenerate openapi.json after changing the HTTP API
 ## Conventions
 
 - Python 3.11+, ruff, pyright. TypeScript strict, ESM (`.js` extensions in imports).
-- Versions of `kibble-engine` and `@kibble/mcp` move in lockstep (`make check-versions`).
+- Versions of `kibble-engine` and `@kibble-ai/mcp` move in lockstep (`make check-versions`).
 - New dependency? Say why in the PR; prefer the standard library when it is close.
 - Architecture decision? Add a half-page ADR in `docs/decisions/`.
 
