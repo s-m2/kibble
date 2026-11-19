@@ -438,3 +438,29 @@ def test_vec_index_is_rebuilt_after_python_mode_writes(tmp_path: Path) -> None:
     with SqliteStore.open(db, embedder_id=EMBEDDER, embed_dim=DIM, vector_backend="vec0") as s:
         symbols = [c.symbol for c in s.get_chunks(ids(s.vector_search(Y, 5)))]
         assert symbols[0] == "two" and set(symbols) == {"one", "two"}
+
+
+# ------------------------------------------------------------ manifest freshness
+
+
+def test_manifest_records_when_each_file_was_indexed(store: SqliteStore) -> None:
+    store.replace_file(file("a.ts"), [chunk("body", X, symbol="s")])
+    assert store.manifest()["a.ts"].indexed_at > 0
+
+
+def test_touch_file_updates_stat_data_without_touching_content(store: SqliteStore) -> None:
+    store.replace_file(file("a.ts"), [chunk("body", X, symbol="s")])
+    before = store.counts()
+    store.touch_file("a.ts", 99, 77)
+    state = store.manifest()["a.ts"]
+    assert (state.mtime_ns, state.size, state.content_hash) == (99, 77, "h1")
+    assert store.counts() == before
+    assert len(store.keyword_search("body", 5)) == 1
+
+
+def test_peek_meta_reads_an_index_without_an_embedder(tmp_path: Path) -> None:
+    db = tmp_path / "index.db"
+    assert SqliteStore.peek_meta(db) is None
+    SqliteStore.open(db, embedder_id=EMBEDDER, embed_dim=DIM).close()
+    meta = SqliteStore.peek_meta(db)
+    assert meta is not None and meta["embedder_id"] == EMBEDDER and meta["embed_dim"] == str(DIM)
