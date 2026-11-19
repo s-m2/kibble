@@ -441,9 +441,32 @@ class SqliteStore:
     def manifest(self) -> dict[str, FileState]:
         with self._lock:
             rows = self._conn.execute(
-                "SELECT path, content_hash, mtime_ns, size FROM files"
+                "SELECT path, content_hash, mtime_ns, size, indexed_at FROM files"
             ).fetchall()
-        return {r["path"]: FileState(r["content_hash"], r["mtime_ns"], r["size"]) for r in rows}
+        return {
+            r["path"]: FileState(r["content_hash"], r["mtime_ns"], r["size"], r["indexed_at"])
+            for r in rows
+        }
+
+    def touch_file(self, path: str, mtime_ns: int, size: int) -> None:
+        with self._lock:
+            self._conn.execute(
+                "UPDATE files SET mtime_ns = ?, size = ?, indexed_at = ? WHERE path = ?",
+                (mtime_ns, size, int(time.time()), path),
+            )
+
+    @staticmethod
+    def peek_meta(path: str | Path) -> dict[str, str] | None:
+        """Read an index's metadata without an embedder (None if there is no index yet)."""
+        if not Path(path).exists():
+            return None
+        conn = sqlite3.connect(f"file:{Path(path).as_posix()}?mode=ro", uri=True)
+        try:
+            return {k: v for k, v in conn.execute("SELECT key, value FROM meta")}
+        except sqlite3.Error:
+            return None
+        finally:
+            conn.close()
 
     def get_cached_embeddings(self, chunk_hashes: Sequence[str]) -> dict[str, list[float]]:
         found: dict[str, list[float]] = {}

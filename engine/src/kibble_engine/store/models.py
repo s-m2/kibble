@@ -65,6 +65,7 @@ class FileState:
     content_hash: str
     mtime_ns: int
     size: int
+    indexed_at: int = 0  # unix seconds; lets the sweep spot "racy" timestamps
 
 
 @dataclass(frozen=True, slots=True)
