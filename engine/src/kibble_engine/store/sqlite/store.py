@@ -531,8 +531,9 @@ class SqliteStore:
                 batch = unique[i : i + _SQL_BATCH]
                 marks = ",".join("?" * len(batch))
                 rows = self._conn.execute(
-                    "SELECT id, file_path, kind, symbol, parent_symbol, start_line, end_line, "
-                    f"content FROM chunks WHERE id IN ({marks})",
+                    "SELECT c.id, c.file_path, c.kind, c.symbol, c.parent_symbol, "
+                    "c.start_line, c.end_line, c.content, f.tags, f.language "
+                    f"FROM chunks c JOIN files f ON f.path = c.file_path WHERE c.id IN ({marks})",
                     batch,
                 ).fetchall()
                 for r in rows:
@@ -545,6 +546,8 @@ class SqliteStore:
                         r["start_line"],
                         r["end_line"],
                         r["content"],
+                        r["tags"],
+                        r["language"],
                     )
         return [by_id[i] for i in chunk_ids if i in by_id]
 

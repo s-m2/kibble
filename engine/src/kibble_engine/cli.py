@@ -168,29 +168,53 @@ def _label(chunk: StoredChunk) -> str:
 
 
 def _search(args: argparse.Namespace) -> int:
+    from kibble_engine.core.search import SearchConfig, SearchFilters
+
     session = _open(args)
     if isinstance(session, int):
         return session
     with session:
-        report = session.refresher.ensure_fresh()
-        note = f"{len(report.refreshed)} refreshed, {len(report.removed)} removed"
-        if report.stale:
-            note += f"; STALE ({len(report.pending)} pending, {len(report.failed)} failed)"
-        print(f"freshness: {note} ({report.duration_s * 1000:.0f} ms)")
+        response = session.searcher.search(
+            args.query,
+            config=SearchConfig(k=args.k, mode=args.mode),
+            filters=SearchFilters(
+                path_prefix=args.path,
+                exclude_tags=frozenset(args.exclude_tag or ()),
+            ),
+            fresh=not args.no_refresh,
+        )
 
-        vector_hits = session.store.vector_search(session.embedder.embed_query(args.query), args.k)
-        keyword_hits = session.store.keyword_search(args.query, args.k)
-        for title, hits in (("vector", vector_hits), ("keyword (BM25)", keyword_hits)):
-            print(f"\n{title}:")
-            chunks = {c.id: c for c in session.store.get_chunks([h.chunk_id for h in hits])}
-            for hit in hits:
-                chunk = chunks.get(hit.chunk_id)
-                if chunk is None:
-                    continue
-                where = f"{chunk.file_path}:{chunk.start_line}-{chunk.end_line}"
-                print(f"  {hit.score:7.3f}  {where}  {_label(chunk)}")
-                print(f"           {_first_line(chunk.content)}")
-    return 1 if report.stale else 0
+    stale = bool(response.freshness and response.freshness["stale"])
+    if args.json:
+        print(json.dumps(response.to_dict(), indent=2))
+        return 1 if stale else 0
+
+    if response.freshness is not None:
+        f = response.freshness
+        note = f"{f['refreshed_files']} refreshed, {f['removed_files']} removed"
+        if stale:
+            note += f"; STALE ({f['pending_files']} pending, {len(f['failed_files'])} failed)"
+        print(f"freshness: {note} ({f['duration_ms']} ms)")
+    for reason in response.degraded:
+        print(f"DEGRADED: {reason}", file=sys.stderr)
+    v_weight, k_weight = response.weights
+    print(
+        f"query: {response.shape}  weights vector x{v_weight:.2f}, keyword x{k_weight:.2f}  "
+        f"keyword terms: {response.keyword_query or '-'}"
+    )
+    if not response.hits:
+        print("no results")
+    for i, hit in enumerate(response.hits, start=1):
+        chunk = hit.chunk
+        sources = " ".join(
+            f"{name}#{rank}"
+            for name, rank in (("v", hit.vector_rank), ("k", hit.keyword_rank))
+            if rank is not None
+        )
+        where = f"{chunk.file_path}:{chunk.start_line}-{chunk.end_line}"
+        print(f"{i:2d}. {hit.score:.4f}  {where}  {_label(chunk)}  [{sources}]")
+        print(f"      {_first_line(chunk.content)}")
+    return 1 if stale else 0
 
 
 # ---------------------------------------------------------------------- status
@@ -259,9 +283,26 @@ def main(argv: list[str] | None = None) -> int:
         "--ignore-drift", action="store_true", help="continue even if the endpoint output changed"
     )
 
-    search = with_repo(sub.add_parser("search", help="search the index (vector and keyword)"))
+    search = with_repo(sub.add_parser("search", help="hybrid search: vector + keyword, fused"))
     search.add_argument("query")
-    search.add_argument("-k", type=int, default=8, help="results per list (default 8)")
+    search.add_argument("-k", type=int, default=10, help="number of results (default 10)")
+    search.add_argument(
+        "--mode",
+        choices=["hybrid", "vector", "keyword"],
+        default="hybrid",
+        help="use only one signal (for debugging and ablations)",
+    )
+    search.add_argument("--path", help="only files whose path starts with this prefix")
+    search.add_argument(
+        "--exclude-tag",
+        action="append",
+        choices=["test", "vendor", "generated"],
+        help="drop files with this tag (repeatable)",
+    )
+    search.add_argument(
+        "--no-refresh", action="store_true", help="skip the freshness check (not recommended)"
+    )
+    search.add_argument("--json", action="store_true", help="machine-readable output")
 
     status = sub.add_parser("status", help="show index contents and pending changes")
     with_repo(status, config=False)

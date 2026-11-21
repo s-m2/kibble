@@ -86,6 +86,8 @@ class StoredChunk:
     start_line: int
     end_line: int
     content: str
+    tags: str = ""  # the file's labels: 'test', 'vendor', 'generated' (space-separated)
+    language: str | None = None
 
 
 @dataclass(frozen=True, slots=True)

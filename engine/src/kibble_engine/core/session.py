@@ -14,6 +14,7 @@ from pathlib import Path
 from types import TracebackType
 
 from kibble_engine.core.refresh import Refresher
+from kibble_engine.core.search import HybridSearcher
 from kibble_engine.dotenv import load_dotenv_file
 from kibble_engine.embedders import (
     CanaryResult,
@@ -43,6 +44,7 @@ class Session:
     store: SqliteStore
     refresher: Refresher
     canary: CanaryResult
+    searcher: HybridSearcher
 
     def close(self) -> None:
         self.store.close()
@@ -96,4 +98,5 @@ def open_session(
         use_git=use_git,
         max_chars=min(DEFAULT_MAX_CHARS, cfg.max_input_chars),
     )
-    return Session(root, cfg, emb, store, refresher, canary)
+    searcher = HybridSearcher(store, emb, refresher)
+    return Session(root, cfg, emb, store, refresher, canary, searcher)

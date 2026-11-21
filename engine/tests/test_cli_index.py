@@ -81,3 +81,17 @@ def test_an_unreachable_endpoint_is_exit_code_1_and_changes_nothing(
     assert main(["status", *args]) == 1  # the edit is still pending
     assert main(["index", *args]) == 0  # and completes once the endpoint is back
     assert main(["status", *args]) == 0
+
+
+def test_search_modes_filters_and_json_output(
+    tmp_path: Path, monkeypatch: pytest.MonkeyPatch
+) -> None:
+    repo, server = prepare(tmp_path, monkeypatch)
+    args = ["--repo", str(repo)]
+    assert main(["index", *args]) == 0
+
+    for mode in ("hybrid", "vector", "keyword"):
+        assert main(["search", "validate the token", *args, "--mode", mode]) == 0
+    assert main(["search", "validate the token", *args, "--json"]) == 0
+    assert main(["search", "token", *args, "--path", "a.", "--exclude-tag", "test"]) == 0
+    assert main(["search", "token", *args, "--no-refresh", "-k", "1"]) == 0

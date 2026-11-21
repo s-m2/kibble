@@ -464,3 +464,12 @@ def test_peek_meta_reads_an_index_without_an_embedder(tmp_path: Path) -> None:
     SqliteStore.open(db, embedder_id=EMBEDDER, embed_dim=DIM).close()
     meta = SqliteStore.peek_meta(db)
     assert meta is not None and meta["embedder_id"] == EMBEDDER and meta["embed_dim"] == str(DIM)
+
+
+def test_get_chunks_carries_the_files_tags_and_language(store: SqliteStore) -> None:
+    store.replace_file(
+        FileRecord("t/a.ts", "h", 1, 10, language="typescript", tags="test vendor"),
+        [chunk("body", X, symbol="s")],
+    )
+    [stored] = store.get_chunks(ids(store.keyword_search("body", 5)))
+    assert (stored.tags, stored.language) == ("test vendor", "typescript")
