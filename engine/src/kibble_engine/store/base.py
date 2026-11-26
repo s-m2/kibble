@@ -43,6 +43,10 @@ class Store(Protocol):
 
     def remove_file(self, path: str) -> None: ...
 
+    def touch_file(self, path: str, mtime_ns: int, size: int) -> None:
+        """Record new stat data for a file whose content is verified unchanged."""
+        ...
+
     def manifest(self) -> dict[str, FileState]:
         """path -> state, for the query-time stat sweep."""
         ...

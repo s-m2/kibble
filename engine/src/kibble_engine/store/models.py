@@ -65,6 +65,7 @@ class FileState:
     content_hash: str
     mtime_ns: int
     size: int
+    indexed_at: int = 0  # unix seconds; lets the sweep spot "racy" timestamps
 
 
 @dataclass(frozen=True, slots=True)
@@ -85,6 +86,8 @@ class StoredChunk:
     start_line: int
     end_line: int
     content: str
+    tags: str = ""  # the file's labels: 'test', 'vendor', 'generated' (space-separated)
+    language: str | None = None
 
 
 @dataclass(frozen=True, slots=True)

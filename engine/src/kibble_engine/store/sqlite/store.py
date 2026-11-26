@@ -441,9 +441,32 @@ class SqliteStore:
     def manifest(self) -> dict[str, FileState]:
         with self._lock:
             rows = self._conn.execute(
-                "SELECT path, content_hash, mtime_ns, size FROM files"
+                "SELECT path, content_hash, mtime_ns, size, indexed_at FROM files"
             ).fetchall()
-        return {r["path"]: FileState(r["content_hash"], r["mtime_ns"], r["size"]) for r in rows}
+        return {
+            r["path"]: FileState(r["content_hash"], r["mtime_ns"], r["size"], r["indexed_at"])
+            for r in rows
+        }
+
+    def touch_file(self, path: str, mtime_ns: int, size: int) -> None:
+        with self._lock:
+            self._conn.execute(
+                "UPDATE files SET mtime_ns = ?, size = ?, indexed_at = ? WHERE path = ?",
+                (mtime_ns, size, int(time.time()), path),
+            )
+
+    @staticmethod
+    def peek_meta(path: str | Path) -> dict[str, str] | None:
+        """Read an index's metadata without an embedder (None if there is no index yet)."""
+        if not Path(path).exists():
+            return None
+        conn = sqlite3.connect(f"file:{Path(path).as_posix()}?mode=ro", uri=True)
+        try:
+            return {k: v for k, v in conn.execute("SELECT key, value FROM meta")}
+        except sqlite3.Error:
+            return None
+        finally:
+            conn.close()
 
     def get_cached_embeddings(self, chunk_hashes: Sequence[str]) -> dict[str, list[float]]:
         found: dict[str, list[float]] = {}
@@ -508,8 +531,9 @@ class SqliteStore:
                 batch = unique[i : i + _SQL_BATCH]
                 marks = ",".join("?" * len(batch))
                 rows = self._conn.execute(
-                    "SELECT id, file_path, kind, symbol, parent_symbol, start_line, end_line, "
-                    f"content FROM chunks WHERE id IN ({marks})",
+                    "SELECT c.id, c.file_path, c.kind, c.symbol, c.parent_symbol, "
+                    "c.start_line, c.end_line, c.content, f.tags, f.language "
+                    f"FROM chunks c JOIN files f ON f.path = c.file_path WHERE c.id IN ({marks})",
                     batch,
                 ).fetchall()
                 for r in rows:
@@ -522,6 +546,8 @@ class SqliteStore:
                         r["start_line"],
                         r["end_line"],
                         r["content"],
+                        r["tags"],
+                        r["language"],
                     )
         return [by_id[i] for i in chunk_ids if i in by_id]
 
